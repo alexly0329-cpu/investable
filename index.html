@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VC Startup Finder — Startup sourcing for venture capital</title>
+<script>(()=>{let s;try{s=localStorage.getItem('vcsf-theme')}catch{}document.documentElement.dataset.theme=['light','dark'].includes(s)?s:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'})();</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="bundle.css">
+<style>
+:root{--err:#8f1f2c;--err-bg:#fff0f1}
+[data-theme=dark]{--err:#f0a0a8;--err-bg:#3a2226}
+html{scroll-behavior:smooth}
+body{overflow-x:hidden}
+.skip{position:absolute;left:-999px;top:8px;background:var(--acid);color:var(--on-acid);padding:var(--space-16);font:15px var(--font-mono);z-index:60}
+.skip:focus{left:8px}
+
+/* header: fixed forest bar, Grid header-actions panel on the right */
+.hdr{position:fixed;inset:0 0 auto;z-index:40;height:64px;background:var(--forest);display:flex;align-items:center;justify-content:space-between;padding:0 5%}
+.hdr:after{content:"";position:absolute;left:3.5%;right:3.5%;bottom:0;border-bottom:1px solid var(--rule-on-dark)}
+.logo{white-space:nowrap;font:500 19px var(--font-sans);letter-spacing:.22em;text-transform:uppercase;color:var(--on-forest);text-decoration:none}
+.hdr nav{position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:36px}
+.hdr nav a{font:13px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--on-forest-muted);text-decoration:none}
+.hdr nav a:hover{color:var(--on-forest)}
+.actions{display:flex;background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow-actions)}
+.actions a,.actions button{white-space:nowrap;font:13px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:none;border:0;padding:11px 16px;cursor:pointer;text-decoration:none}
+.actions>*+*{border-left:1px solid var(--line)}
+
+/* cover */
+.cover{position:relative;min-height:100vh;min-height:100dvh;background:var(--forest);color:var(--on-forest);display:flex;flex-direction:column;justify-content:flex-end;padding:96px 5% 11vh;overflow:hidden}
+.cover svg.map{position:absolute;inset:0;width:100%;height:100%}
+.cover:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0e221d88,transparent 70%),linear-gradient(0deg,#0b1d18dd,transparent 55%);z-index:1}
+.cover>*:not(svg){position:relative;z-index:2}
+.grat{stroke:var(--rule-on-dark);stroke-width:1;fill:none}
+.coord{font:12px var(--font-mono);letter-spacing:.08em;fill:#ffffff88}
+.edge{stroke:#ffffff55;stroke-width:1;fill:none;stroke-dasharray:4 6;animation:flow 14s linear infinite}
+.dot{fill:var(--on-forest);animation:pulse 4s ease-in-out infinite}
+@keyframes flow{to{stroke-dashoffset:-200}}
+@keyframes pulse{50%{opacity:.35}}
+.cover h1{font-weight:400;font-size:clamp(44px,5.3vw,84px);line-height:1;letter-spacing:-.055em;margin:0 0 36px}
+.steps{display:flex;flex-wrap:wrap;margin:0 0 24px;border-top:1px solid var(--rule-on-dark);max-width:760px}
+.steps button{flex:1 1 120px;text-align:left;background:none;border:0;border-bottom:2px solid transparent;color:#ffffff99;font:13px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;padding:14px 0 12px;cursor:pointer}
+.steps button b{display:block;font-weight:400;opacity:.6;margin-bottom:4px}
+.steps button[aria-selected=true]{color:var(--on-forest);border-bottom-color:var(--on-forest)}
+#sub{font-size:18px;color:var(--on-forest-muted);min-height:28px;margin:0 0 28px}
+.cta{display:flex;gap:36px;align-items:center;flex-wrap:wrap}
+.cta .grid-text-link{color:var(--on-forest)}
+.chips{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
+.chips span{font:12px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--rule-on-dark);padding:7px 12px;color:var(--on-forest-muted)}
+.hint{position:absolute!important;left:50%;bottom:24px;transform:translateX(-50%);font:12px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--on-forest-muted);display:flex;flex-direction:column;align-items:center;gap:8px}
+.hint i{width:1px;height:28px;background:var(--on-forest-muted);animation:drop 2s ease-in-out infinite;transform-origin:top}
+@keyframes drop{0%{transform:scaleY(0)}60%{transform:scaleY(1)}100%{transform:scaleY(1);opacity:0}}
+
+/* pinned story: same 8-stage flow as the original */
+.story{height:1500vh;position:relative}
+.stick{box-sizing:border-box;position:sticky;top:0;height:100vh;height:100dvh;padding-top:84px;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.titles{display:grid;width:min(720px,90vw);min-height:210px;align-content:start;flex:none;text-align:center}
+.t{grid-area:1/1;opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s;pointer-events:none}
+.t.on{opacity:1;transform:none}
+.t h2{font-weight:400;font-size:clamp(34px,4.2vw,58px);line-height:1.02;letter-spacing:-.06em;margin:0 0 14px}
+.t p{font-size:17px;line-height:1.55;color:var(--muted);margin:0 auto 18px;max-width:600px}
+.crumb{display:inline-flex;gap:10px;align-items:center;font:12px var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.crumb b{font-weight:500;padding:5px 10px;background:var(--surface);color:var(--ink)}
+.crumb.gap b{background:var(--err-bg);color:var(--err)}
+.crumb.std b{background:var(--blue);color:var(--forest)}
+.scene{width:min(1000px,94vw);flex:1;min-height:0;max-height:480px}
+.scene text{font:10px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;fill:var(--muted)}
+.scene .dc text,.scene .pj text,.scene .lab text,.scene .prof text,.scene .leg text{paint-order:stroke;stroke:var(--paper);stroke-width:5px;stroke-linejoin:round}
+.scene .nd{transition:transform 1s cubic-bezier(.2,.7,.2,1),opacity .6s}
+.scene .dc circle{fill:var(--paper);stroke:var(--muted);stroke-width:1.5;transition:fill .5s,stroke .5s}
+.scene .dc{opacity:0}
+.scene .ed{stroke:var(--line);stroke-width:1;opacity:0;transition:opacity .7s}
+.scene .tag rect{fill:var(--surface)}
+.scene .tag{opacity:0;transition:opacity .6s}
+.scene .seal{opacity:0;transition:opacity .8s}
+.scene .seal circle.r{fill:none;stroke:var(--data-bar);stroke-width:1.5}
+.scene .seal circle.c{fill:var(--data-bar)}
+.scene .seal path{stroke:var(--paper);stroke-width:3;fill:none}
+.scene .seal text{fill:var(--data-bar)}
+.scene .pj{opacity:0;transition:opacity .7s}
+.scene .pj circle{fill:var(--data-bar);stroke:var(--data-bar)}
+.scene .pj .ck{fill:none;stroke:var(--paper);stroke-width:2.5}
+.scene .pj circle.n{transition:stroke-width .5s,stroke .5s}
+.scene .pj .dd circle{fill:var(--data-bar);stroke:var(--data-bar);stroke-width:1;opacity:0;transition:opacity .4s}
+.scene .pj .dd circle.off{fill:none;stroke:var(--muted)}
+.scene .pj .dd path{fill:none;stroke:var(--muted);stroke-width:1.5;opacity:0;transition:opacity .4s}
+.scene .leg{opacity:0;transition:opacity .6s}
+.scene[data-s="7"] .leg{opacity:1;transition-delay:1.4s}
+.scene .lk{fill:none;stroke:var(--data-bar);stroke-width:1.5;stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1)}
+.scene .rec{opacity:0;transition:opacity .6s}
+.scene .rec rect{fill:var(--surface)}
+.scene .rec text{fill:var(--ink);letter-spacing:.1em}
+.scene .fn{opacity:0;transition:opacity .7s,transform 1s cubic-bezier(.2,.7,.2,1)}
+.scene .fn path{fill:none;stroke:var(--data-bar);stroke-width:1.5}
+.scene .lab{opacity:0;transition:opacity .6s}
+.scene .lab text{fill:var(--data-bar);letter-spacing:.14em}
+.scene .prof{opacity:0;transition:opacity .7s}
+.scene .prof .tr{stroke:var(--line);stroke-width:3}
+.scene .prof .kn{fill:var(--ink);transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.scene .scan{opacity:0;stroke:var(--data-bar);stroke-width:2;stroke-dasharray:2 4}
+/* stage rules */
+.scene[data-s="0"] .dc.first,.scene[data-s="1"] .dc,.scene[data-s="2"] .dc,.scene[data-s="3"] .dc,.scene[data-s="4"] .dc{opacity:1}
+.scene[data-s="1"] .ed,.scene[data-s="2"] .ed,.scene[data-s="3"] .ed{opacity:1}
+.scene[data-s="2"] .tag,.scene[data-s="3"] .tag{opacity:1}
+.scene[data-s="2"] .dc.gap circle{stroke:var(--err);fill:var(--err-bg)}
+.scene[data-s="2"] .dc.gap text{fill:var(--err)}
+.scene[data-s="3"] .dc.gap circle{fill:var(--data-bar);stroke:var(--data-bar)}
+.scene[data-s="4"] .dc{opacity:0}
+.scene[data-s="4"] .seal{opacity:1}
+.scene[data-s="5"] .pj,.scene[data-s="6"] .pj,.scene[data-s="7"] .pj{opacity:1}
+.scene[data-s="5"] .fn,.scene[data-s="5"] .lab{opacity:1}
+.scene[data-s="6"] .lab,.scene[data-s="7"] .lab{opacity:1}
+.scene[data-s="6"] .prof,.scene[data-s="7"] .prof{opacity:1}
+.scene[data-s="7"] .pj .dd circle,.scene[data-s="7"] .pj .dd path{opacity:1;transition-delay:var(--d)}
+.scene[data-s="7"] .pj:not(.best){opacity:.3;transition-delay:2.4s}
+.scene[data-s="7"] .pj.best circle.n{stroke:var(--blue);stroke-width:4;transition-delay:2.4s}
+.scene[data-s="7"] .lk{stroke-dashoffset:0;transition-delay:calc(2.8s + var(--k)*.14s)}
+.scene[data-s="7"] .lk.trunk{transition-delay:2.6s;transition-duration:1.2s}
+.scene[data-s="7"] .prof .kn{transition-delay:3.9s}
+.scene[data-s="7"] .rec{opacity:1;transition-delay:4.6s}
+.scene[data-s="7"] .scan{animation:sweep 2.2s cubic-bezier(.4,0,.2,1) .2s both}
+@keyframes sweep{0%{opacity:1;transform:translateX(70px)}88%{opacity:1;transform:translateX(360px)}100%{opacity:0;transform:translateX(380px)}}
+.dots{position:fixed;right:22px;top:50%;transform:translateY(-50%);display:grid;gap:12px;z-index:30;transition:opacity .3s}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .3s,transform .3s}
+.dots i.on{background:var(--ink);transform:scale(1.5)}
+
+.end{background:var(--forest);color:var(--on-forest);padding:120px 5%;text-align:center;min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.end .grid-h2{margin-bottom:24px}
+.end p.l{color:var(--on-forest-muted);max-width:460px;margin:0 0 36px}
+footer{background:var(--forest);color:var(--on-forest-muted);padding:28px 5%;border-top:1px solid var(--rule-on-dark);font:13px var(--font-mono);letter-spacing:.06em;text-transform:uppercase}
+dialog{background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:0;padding:40px;max-width:min(460px,90vw);box-shadow:var(--shadow-menu)}
+dialog::backdrop{background:#172c26cc}
+dialog h2{font-weight:400;font-size:44px;line-height:1;letter-spacing:-.06em;margin:0 0 16px}
+dialog p{color:var(--muted);margin:0 0 28px;line-height:1.6}
+dialog .grid-eyebrow{color:var(--ink);margin-bottom:20px}
+@media(max-width:800px){
+  .hdr nav,.actions .si{display:none}
+  .logo{font-size:13px;letter-spacing:.14em}
+  @media(max-width:360px){.logo{font-size:11px;letter-spacing:.08em}.actions a,.actions button{padding:8px 8px;font-size:11px}}
+  .actions a,.actions button{padding:9px 11px;font-size:12px}
+  .hint{position:relative!important;left:auto;bottom:auto;transform:none;margin-top:32px;align-items:flex-start}
+  .cover{padding-bottom:40px}
+  .scene{max-height:none}
+  .scene text{font-size:13px}
+  .scene .tag text{font-size:11px}
+  .titles{width:calc(100vw - 52px);min-height:0}
+  .t h2{font-size:30px}
+  .t p{font-size:15px;margin-bottom:14px}
+  .dots{right:5px;gap:9px}
+  .dots i{width:5px;height:5px}
+  .story{height:1200vh}
+}
+@media (prefers-reduced-motion:reduce){.hint i,.scene[data-s="7"] .scan{animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#how">Skip to how it works</a>
+<header class="hdr">
+  <a class="logo" href="#">VC Startup Finder</a>
+  <nav><a href="#how">How it works</a><a href="#end">Status</a></nav>
+  <div class="actions"><button type="button" data-beta>Try the beta</button><button id="theme" type="button" aria-pressed="false">☾</button></div>
+</header>
+
+<main>
+<section class="cover" aria-label="VC Startup Finder">
+  <svg class="map" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true" id="map"></svg>
+  <p class="grid-eyebrow" style="color:var(--on-forest-muted)">Venture capital / startup sourcing</p>
+  <h1>Find startups.<br>Fit your model.</h1>
+  <div class="steps" id="steps" role="tablist"></div>
+  <p id="sub"></p>
+  <div class="cta">
+    <button class="grid-button" type="button" data-beta>Try the beta <span aria-hidden="true">→</span></button>
+    <a class="grid-text-link" href="#how">How it works</a>
+  </div>
+  <div class="chips"><span>Versioned investment models</span><span>Source-linked data</span><span>Explainable scores</span></div>
+  <div class="hint">Scroll to explore<i></i></div>
+</section>
+
+<section class="story" id="how">
+  <div class="stick">
+    <div class="titles" id="titles">
+      <div class="t on"><h2>Startup data, with sources.</h2><p>Import startup information only from sources your fund may use, keeping source links, capture dates and usage rights.</p><span class="crumb">Sources →<b>Startup records</b></span></div>
+      <div class="t"><h2>Resolving what's missing.</h2><p>Duplicate company records are merged. Missing or conflicting facts are flagged, never guessed.</p><span class="crumb gap">Startup records →<b>Data check</b></span></div>
+      <div class="t"><h2>Closing gaps with evidence.</h2><p>Gaps are filled from permitted sources and keep their links. Until then, unknown facts stay unknown and are not scored as negative.</p><span class="crumb">Flagged →<b>Sourced</b></span></div>
+      <div class="t"><h2>Eligible, then scored.</h2><p>Hard eligibility rules run first. Then an explainable fit score is calculated from the evidence available.</p><span class="crumb std">Evidence →<b>Fit score</b></span></div>
+      <div class="t"><h2>A shortlist for your model.</h2><p>Eligible startups are ranked against your versioned model: stage, geography, sectors, check size, exclusions and weighted criteria.</p><span class="crumb std">Scored →<b>Shortlist</b></span></div>
+      <div class="t"><h2>Returns you can inspect.</h2><p>Adjust the assumptions and see the calculation, not only the answer. Gross, deal-level scenarios from dated cash flows and simple dilution.</p><span class="crumb std">Startup →<b>Return scenario</b></span></div>
+      <div class="t"><h2>Review, annotate, share.</h2><p>The best match stays linked to its return assumptions. Share the decision record with named recipients. Fit shows as criteria matched, and people own the decision.</p><span class="crumb std">Review →<b>Decision record</b></span></div>
+    </div>
+    <svg class="scene" id="scene" data-s="0" viewBox="0 0 1000 440" role="img" aria-label="Startup data becomes a scored shortlist matched to an investment model, with a return scenario"></svg>
+  </div>
+</section>
+<div class="dots" id="dots" aria-hidden="true"></div>
+
+<section class="end" id="end">
+  <h2 class="grid-h2">Find the startups. Keep the judgment.</h2>
+  <p class="l">Early project scaffold, not a deployed product. Scores are screening aids, and human reviewers own investment decisions.</p>
+  <button class="grid-button" type="button" data-beta>Try the beta <span aria-hidden="true">→</span></button>
+  <p style="margin:18px 0 0;font:13px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--on-forest-muted)">Proposed: installable PWA, guided conversation, optional voice</p>
+</section>
+</main>
+<footer>VC Startup Finder · Early project scaffold</footer>
+
+<dialog id="beta" aria-labelledby="beta-h">
+  <p class="grid-eyebrow">Beta / coming soon</p>
+  <h2 id="beta-h">Be first in.</h2>
+  <p>We are building a beta of VC Startup Finder. The invitation link will appear here when it opens.</p>
+  <button class="grid-button" type="button" data-close>Close <span aria-hidden="true">×</span></button>
+</dialog>
+
+<script>
+const NS='http://www.w3.org/2000/svg',$=id=>document.getElementById(id);
+const mk=(p,t,a,txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;p.append(e);return e};
+
+/* cover: Grid graticule + drifting network */
+const map=$('map');
+for(let x=0;x<=1440;x+=120)mk(map,'path',{class:'grat',d:`M${x} 0V900`});
+for(let y=0;y<=900;y+=120)mk(map,'path',{class:'grat',d:`M0 ${y}H1440`});
+[[120,"40.00° N"],[360,"39.50° N"],[600,"39.00° N"]].forEach(([y,t])=>mk(map,'text',{class:'coord',x:1300,y:y+16},t));
+[[240,"83.0° W"],[600,"82.5° W"],[960,"82.0° W"]].forEach(([x,t])=>mk(map,'text',{class:'coord',x:x+8,y:860},t));
+const pts=[[900,210],[1060,330],[980,470],[1200,420],[1120,600],[820,520],[1280,240]];
+[[0,1],[1,2],[1,3],[2,5],[3,4],[0,6],[4,2]].forEach(([a,b])=>mk(map,'path',{class:'edge',d:`M${pts[a]}L${pts[b]}`}));
+pts.forEach(([x,y],i)=>{const c=mk(map,'circle',{class:'dot',cx:x,cy:y,r:5});c.style.animationDelay=i*.5+'s'});
+
+/* cover tabs */
+const T=[["Define","Define a versioned investment model: stage, geography, sectors, check size, exclusions and weighted criteria."],["Import","Import startup information from allowed sources, keeping links, dates and usage rights."],["Resolve","Resolve duplicate companies and flag missing or conflicting facts."],["Score","Apply hard rules, then calculate an explainable fit score."],["Review","Inspect return assumptions, annotate, and share a decision record."]];
+const steps=$('steps'),sub=$('sub');let cur=0,timer;
+T.forEach((t,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('role','tab');b.innerHTML=`<b>0${i+1}</b>${t[0]}`;b.onclick=()=>{pick(i);clearInterval(timer)};steps.append(b)});
+function pick(i){cur=i;[...steps.children].forEach((b,j)=>b.setAttribute('aria-selected',j===i));sub.textContent=T[i][1]}
+pick(0);
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches)timer=setInterval(()=>pick((cur+1)%T.length),3600);
+
+/* story scene */
+const sc=$('scene');
+const D=[["Website",600,100],["Filings",330,160],["Founders",420,235],["Product",500,275],["News",430,60],["Funding",500,160],["Customers",690,190],["Hiring",590,230],["Traction",720,275],["Market",380,330],["Patents",540,360],["Cap table",270,265],["Revenue",290,90],["References",730,110]];
+const GAPS=new Set([8,9,10,11,12,13]);
+const EDGES=[[0,5],[0,4],[4,5],[5,2],[5,6],[2,3],[1,2],[2,7],[7,6],[7,8],[3,10],[3,9],[1,12],[6,13],[8,10],[11,2],[1,11]];
+EDGES.forEach(([a,b])=>mk(sc,'path',{class:'ed',d:`M${D[a][1]} ${D[a][2]}L${D[b][1]} ${D[b][2]}`}));
+const docs=D.map(([n,x,y],i)=>{const g=mk(sc,'g',{class:'nd dc'+(i<4?' first':'')+(GAPS.has(i)?' gap':'')});mk(g,'circle',{r:7});const t=mk(g,'text',{y:22,'text-anchor':'middle'},n);g.style.transform=`translate(${x}px,${y}px)`;g.label=t;return g});
+/* put each label on the side of its node where no line, node or other label is in the way */
+(function placeLabels(){
+  const W=n=>n.length*8.4+6,H=22,boxes=[];
+  const spots=w=>[[0,24,'middle',-w/2,24-11],[0,-12,'middle',-w/2,-12-11],[13,4,'start',13,4-11],[-13,4,'end',-13-w,4-11],[0,38,'middle',-w/2,38-11],[0,-26,'middle',-w/2,-26-11],[13,-8,'start',13,-8-11],[-13,-8,'end',-13-w,-8-11],[13,18,'start',13,18-11],[-13,18,'end',-13-w,18-11],[0,52,'middle',-w/2,52-11],[0,-40,'middle',-w/2,-40-11]];
+  const onLine=(r)=>EDGES.some(([a,b])=>{const [,x1,y1]=D[a],[,x2,y2]=D[b],L=Math.hypot(x2-x1,y2-y1);for(let d=0;d<=L;d+=2){const x=x1+(x2-x1)*d/L,y=y1+(y2-y1)*d/L;if(x>r.x0-2&&x<r.x1+2&&y>r.y0-2&&y<r.y1+2)return true}return false});
+  const hit=(a,b)=>a.x0<b.x1&&a.x1>b.x0&&a.y0<b.y1&&a.y1>b.y0;
+  D.forEach(([n,x,y],i)=>{const w=W(n);let pick=null,best=9;
+    for(const [dx,dy,an,bx,by] of spots(w)){const r={x0:x+bx,x1:x+bx+w,y0:y+by-4,y1:y+by-4+H};
+      const sc=(r.x0<245||r.x1>778?2:0)+(onLine(r)?1:0)+(boxes.some(b=>hit(r,b))?1:0)+(D.some(([,nx,ny],j)=>j!==i&&hit(r,{x0:nx-10,x1:nx+10,y0:ny-10,y1:ny+10}))?1:0);
+      if(sc<best){best=sc;pick={dx,dy,an,r};if(sc===0)break}}
+    boxes.push(pick.r);docs[i].label.setAttribute('x',pick.dx);docs[i].label.setAttribute('y',pick.dy);docs[i].label.setAttribute('text-anchor',pick.an)})
+})();
+const tag=(x,t)=>{const g=mk(sc,'g',{class:'tag'});mk(g,'rect',{x:x-58,y:18,width:116,height:22});mk(g,'text',{x,y:33,'text-anchor':'middle'},t)};
+tag(300,'Deduplicate');tag(720,'Flag conflicts');
+
+const seal=mk(sc,'g',{class:'seal',transform:'translate(500 220)'});
+mk(seal,'circle',{class:'r',r:62});mk(seal,'circle',{class:'c',r:46});mk(seal,'path',{d:'M-16 0l10 11 22-24'});mk(seal,'text',{y:92,'text-anchor':'middle'},'Eligible');
+
+const PJ=["Startup 01","Startup 02","Startup 03","Startup 04","Startup 05","Startup 06","Startup 07","Startup 08","Startup 09"],DOTS=[[1,1,1,1,1],[1,1,2,0,2],[1,1,1,2,0],[1,0,2,2,2],[1,1,2,1,0],[1,1,1,1,2],[0,1,2,0,2],[1,1,1,0,2],[1,1,2,2,1]];
+const pj=PJ.map((n,i)=>{const x=110+(i%3)*100,y=130+Math.floor(i/3)*100,g=mk(sc,'g',{class:'pj'});g.setAttribute('transform',`translate(${x} ${y})`);mk(g,'circle',{class:'n',r:24});mk(g,'path',{class:'ck',d:'M-9 0l6 7 12-14'});const dd=mk(g,'g',{class:'dd'});DOTS[i].forEach((on,j)=>{const cx=-18+j*9,c=on===2?mk(dd,'path',{d:`M${cx-3} 58H${cx+3}`}):mk(dd,'circle',{cx,cy:58,r:3,class:on?'':'off'});c.style.setProperty('--d',(0.4+(i%3)*0.6+Math.floor(i/3)*0.15+j*0.07).toFixed(2)+'s')});if(i===0)g.classList.add('best');mk(g,'text',{y:42,'text-anchor':'middle'},n);return g});
+const leg=mk(sc,'g',{class:'leg'});mk(leg,'text',{x:84,y:424},'● matched    ○ not matched    – unknown');
+const lab=(x,t)=>{const g=mk(sc,'g',{class:'lab'});mk(g,'text',{x,y:50,'text-anchor':'middle'},t);return g};
+lab(210,'Startups');const labModel=lab(740,'Your model');
+
+const FN=["Stage","Geography","Sectors","Check size","Exclusions","Weights"];
+const fns=FN.map((n,i)=>{const x=640+(i%2)*200,y=120+Math.floor(i/2)*100,g=mk(sc,'g',{class:'fn'+(i===0?' a':'')});g.style.transform=`translate(${x}px,${y}px)`;
+  mk(g,'path',{d:'M-16 -16h32v32h-32z M-16 0h32 M0 -16v32'});mk(g,'text',{y:40,'text-anchor':'middle'},n);return g});
+const prof=mk(sc,'g',{class:'prof',transform:'translate(640 150)'});
+const KN=[["Check size",.35,.75],["Ownership",.8,.5],["Dilution",.55,.3],["Exit value",.7,.9],["Hold period",.4,.6]];
+const knobs=KN.map(([n,a,b],i)=>{const y=i*36;mk(prof,'text',{x:0,y:y+4},n);mk(prof,'path',{class:'tr',d:`M120 ${y}H320`});const k=mk(prof,'circle',{class:'kn',r:6,cx:120,cy:y});k.style.transform=`translateX(${a*200}px)`;k.dataset.a=a;k.dataset.b=b;return k});
+mk(prof,'text',{x:0,y:-24,style:'fill:var(--data-bar);letter-spacing:.14em'},'Scenario / return assumptions');
+const scan=mk(sc,'path',{class:'scan',d:'M0 100V370'});scan.setAttribute('transform','translate(0 0)');
+const lk=(d,k,c)=>{const e=mk(sc,'path',{class:'lk'+(c?' '+c:''),d,pathLength:1});e.style.setProperty('--k',k);return e};
+const trunk=lk('',0,'trunk'),ticks=[0,1,2,3,4].map(i=>lk('',i+1));
+const rec=mk(sc,'g',{class:'rec',transform:'translate(640 330)'});mk(rec,'rect',{width:320,height:30});mk(rec,'text',{x:12,y:19},'Decision record / Startup 01');
+/* right-hand block sits beside the startups on desktop, below them on a phone */
+const R=mk(sc,'g',{class:'right'});[...fns,labModel,prof,rec].forEach(e=>R.append(e));
+const mq=matchMedia('(max-width:800px)');
+const vb=k=>mq.matches?(k<=4?'236 30 556 370':'30 20 400 750'):'0 0 1000 440';
+function layout(){const m=mq.matches;
+  R.setAttribute('transform',m?'translate(-540 400)':'translate(0 0)');
+  leg.firstChild.setAttribute('y',m?416:424);
+  trunk.setAttribute('d',m?'M86 130H56V694':'M110 106V80H610V294');
+  ticks.forEach((t,i)=>t.setAttribute('d',m?`M56 ${550+i*36}H96`:`M610 ${150+i*36}H630`));
+  sc.setAttribute('viewBox',vb(Math.max(prev,0)))}
+
+/* progress -> stage; dots; titles */
+const TITLE_OF=[0,0,1,2,3,4,5,6],N=8;
+const story=document.querySelector('.story'),titles=[...$('titles').children],dots=$('dots');
+for(let i=0;i<N;i++)dots.append(document.createElement('i'));
+let prev=-1;
+function setStage(k){
+  if(k===prev)return;prev=k;sc.dataset.s=k;sc.setAttribute('viewBox',vb(k));
+  titles.forEach((t,i)=>t.classList.toggle('on',i===TITLE_OF[k]));
+  [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===k));
+  /* docs converge on the seal in stage 4, else rest in the cloud */
+  docs.forEach((g,i)=>{g.style.transform=k===4?'translate(500px,220px)':`translate(${D[i][1]}px,${D[i][2]}px)`});
+  knobs.forEach(n=>{n.style.transform=`translateX(${(k===7?+n.dataset.b:+n.dataset.a)*200}px)`});
+}
+function onScroll(){
+  const r=story.getBoundingClientRect(),inside=r.top<innerHeight*.5&&r.bottom>innerHeight*.5;
+  dots.style.opacity=inside?1:0;
+  const p=Math.min(.999,Math.max(0,-r.top/(r.height-innerHeight)));
+  setStage(Math.floor(p*N));
+}
+addEventListener('scroll',onScroll,{passive:true});layout();onScroll();
+mq.addEventListener('change',()=>{layout();prev=-1;onScroll()});
+
+/* beta invite: set BETA_URL when the beta opens and every button redirects there */
+const BETA_URL='',dlg=$('beta');
+document.querySelectorAll('[data-beta]').forEach(b=>b.addEventListener('click',()=>BETA_URL?location.assign(BETA_URL):dlg.showModal()));
+dlg.addEventListener('click',e=>{if(e.target===dlg||e.target.closest('[data-close]'))dlg.close()});
+
+/* theme toggle */
+const tb=$('theme');
+function theme(t,save){document.documentElement.dataset.theme=t;tb.textContent=t==='dark'?'☀':'☾';tb.setAttribute('aria-label',t==='dark'?'Light mode':'Dark mode');tb.setAttribute('aria-pressed',t==='dark');if(save)try{localStorage.setItem('vcsf-theme',t)}catch{}}
+theme(document.documentElement.dataset.theme);
+tb.onclick=()=>theme(document.documentElement.dataset.theme==='dark'?'light':'dark',true);
+</script>
+</body>
+</html>
